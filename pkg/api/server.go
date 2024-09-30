@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -15,6 +16,7 @@ import (
 )
 
 type srv struct {
+	grpcSrv      *grpc.Server
 	svc          svc
 	healthServer *health.Server
 }
@@ -23,31 +25,52 @@ type svc interface {
 	Rate(ctx context.Context, in controller.Pair) (*controller.Rate, error)
 }
 
-func ListenAndServe(
-	port int,
+func NewServer(
 	svc svc,
+) *srv {
+	return &srv{
+		svc: svc,
+	}
+}
+
+func (s *srv) ListenAndServe(
+	port int,
 ) error {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
 
-	healthServer := health.NewServer()
+	s.healthServer = health.NewServer()
+	s.grpcSrv = grpc.NewServer()
 
-	srv := &srv{
-		svc:          svc,
-		healthServer: healthServer,
+	api.RegisterRateServiceServer(s.grpcSrv, s)
+	healthpb.RegisterHealthServer(s.grpcSrv, s.healthServer)
+	s.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+
+	reflection.Register(s.grpcSrv)
+
+	return s.grpcSrv.Serve(l)
+}
+
+func (s *srv) Shutdown() {
+	s.healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+
+	stopped := make(chan struct{})
+	go func() {
+		s.grpcSrv.GracefulStop()
+		close(stopped)
+	}()
+
+	t := time.NewTimer(30 * time.Second)
+	select {
+	case <-t.C:
+		s.grpcSrv.Stop()
+	case <-stopped:
+		t.Stop()
 	}
 
-	s := grpc.NewServer()
-
-	api.RegisterRateServiceServer(s, srv)
-	healthpb.RegisterHealthServer(s, healthServer)
-	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
-
-	reflection.Register(s)
-
-	return s.Serve(l)
+	s.healthServer.Shutdown()
 }
 
 func (s *srv) GetRate(ctx context.Context, in *api.RateRequest) (*api.RateResponse, error) {

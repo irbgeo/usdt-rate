@@ -55,8 +55,10 @@ func main() {
 
 	ctrl := controller.NewService(rateProvider, stor, metricsSvc)
 
+	apiSrv := api.NewServer(ctrl)
+
 	go func() {
-		err := api.ListenAndServe(cfg.api.Port, ctrl)
+		err := apiSrv.ListenAndServe(cfg.api.Port)
 		if err != nil {
 			logging.Error(err, "msg", "failed to start api")
 			os.Exit(1)
