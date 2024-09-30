@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package api;
+option go_package = ".;proto";
+
+service RateService {
+  rpc GetRate (RateRequest) returns (RateResponse) {}
+}
+
+message RateRequest {
+  string token_a = 1; // USDT
+  string token_b = 2;
+}
+
+message RateResponse {
+  string token_a = 1;
+  string token_b = 2;
+  string ask = 3;
+  string bid = 4;
+}
