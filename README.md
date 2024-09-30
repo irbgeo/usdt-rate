@@ -33,3 +33,12 @@ export API_PORT=8080
 ```bash
 go run main.go -db-host=myhost -db-port=5432 -db-username=myuser -db-password=mypassword -db-name=mydatabase
 ```
+
+### Run project
+
+```bash
+git clone git@github.com:irbgeo/usdt-rate.git
+cd usdt-rate
+make docker-build  
+docker-compose up -d  
+```
