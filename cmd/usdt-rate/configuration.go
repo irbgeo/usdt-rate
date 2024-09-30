@@ -15,16 +15,16 @@ var (
 )
 
 type configuration struct {
-	api *apiConfiguration
-	db  *dbConfiguration
+	api apiConfiguration
+	db  dbConfiguration
 }
 
 type dbConfiguration struct {
 	Host     string `envconfig:"HOST" default:"localhost"`
 	Port     int    `envconfig:"PORT" default:"5432"`
-	Username string `envconfig:"USERNAME" default:""`
-	Password string `envconfig:"PASSWORD" default:""`
-	Name     string `envconfig:"NAME" default:""`
+	Username string `envconfig:"USERNAME"`
+	Password string `envconfig:"PASSWORD"`
+	Name     string `envconfig:"NAME"`
 }
 
 type apiConfiguration struct {
@@ -38,13 +38,13 @@ func readConfig() (*configuration, error) {
 	if err != nil {
 		return nil, rateerr.New(err, "cfg", "db")
 	}
-	cfg.db = dbCfg
+	cfg.db = *dbCfg
 
 	apiCfg, err := readAPIConfig()
 	if err != nil {
 		return nil, rateerr.New(err, "cfg", "api")
 	}
-	cfg.api = apiCfg
+	cfg.api = *apiCfg
 
 	return cfg, nil
 }
@@ -57,8 +57,8 @@ func readDBConfig() (*dbConfiguration, error) {
 	}
 
 	// Define command-line flags
-	dbHost := flag.String("db-host", "localhost", "Database host")
-	dbPort := flag.Int("db-port", 5432, "Database port")
+	dbHost := flag.String("db-host", "", "Database host")
+	dbPort := flag.Int("db-port", 0, "Database port")
 	dbUsername := flag.String("db-username", "", "Database username")
 	dbPassword := flag.String("db-password", "", "Database password")
 	dbName := flag.String("db-name", "", "Database name")

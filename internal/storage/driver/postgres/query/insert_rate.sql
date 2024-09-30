@@ -1,1 +1,1 @@
-INSERT INTO rates (token_a, token_b, ask, bid, timestamp) VALUES ($1, $2, $3, $4, $5);
+INSERT INTO rates (token_a, token_b, ask, bid, timestamp) VALUES (:token_a, :token_b, :ask, :bid, :timestamp);

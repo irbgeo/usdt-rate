@@ -33,10 +33,10 @@ func NewDriver(opts StartOpts) (*postgres, error) {
 		db: db,
 	}
 
-	err = d.Migrate()
-	if err != nil {
-		return nil, err
-	}
+	// err = d.Migrate()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return d, nil
 }

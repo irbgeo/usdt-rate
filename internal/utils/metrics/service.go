@@ -1,6 +1,12 @@
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/irbgeo/usdt-rate/internal/controller"
+)
 
 type service struct {
 	controller *prometheus.HistogramVec
@@ -13,38 +19,39 @@ func NewService() *service {
 		controller: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "controller_duration_seconds",
 			Help: "Duration of controller requests",
-		}, []string{"token_a", "token_b", "error"}),
+		}, []string{"token_b", "error"}),
 		storage: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "storage_duration_seconds",
 			Help: "Duration of storage requests",
-		}, []string{"token_a", "token_b", "error"}),
+		}, []string{"token_b", "error"}),
 		rate: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name: "rate_duration_seconds",
 			Help: "Duration of rate requests",
-		}, []string{"token_a", "token_b", "error"}),
+		}, []string{"token_b", "error"}),
 	}
 }
 
-func (s *service) ObserveControllerRate(tokenA, tokenB string, duration float64, err error) {
+func (s *service) ObserveControllerRate(in controller.Pair, duration time.Duration, err error) {
 	var e string
 	if err != nil {
 		e = err.Error()
 	}
-	s.controller.WithLabelValues(tokenA, tokenB, e).Observe(duration)
+
+	s.controller.WithLabelValues(in.TokenB, e).Observe(float64(duration))
 }
 
-func (s *service) ObserveStorageCreate(tokenA, tokenB string, duration float64, err error) {
+func (s *service) ObserveStorageCreate(in controller.Rate, duration time.Duration, err error) {
 	var e string
 	if err != nil {
 		e = err.Error()
 	}
-	s.storage.WithLabelValues(tokenA, tokenB, e).Observe(duration)
+	s.storage.WithLabelValues(in.TokenB, e).Observe(float64(duration))
 }
 
-func (s *service) ObserveRateRate(tokenA, tokenB string, duration float64, err error) {
+func (s *service) ObserveRateProviderGet(in controller.Pair, duration time.Duration, err error) {
 	var e string
 	if err != nil {
 		e = err.Error()
 	}
-	s.rate.WithLabelValues(tokenA, tokenB, e).Observe(duration)
+	s.rate.WithLabelValues(in.TokenB, e).Observe(float64(duration))
 }

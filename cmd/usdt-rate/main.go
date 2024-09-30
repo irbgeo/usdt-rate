@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"github.com/irbgeo/usdt-rate/internal/storage"
 	"github.com/irbgeo/usdt-rate/internal/storage/driver/postgres"
 	"github.com/irbgeo/usdt-rate/internal/utils/logging"
+	"github.com/irbgeo/usdt-rate/internal/utils/metrics"
 	"github.com/irbgeo/usdt-rate/pkg/api"
 )
 
@@ -27,7 +29,7 @@ func main() {
 		logging.Error(err, "msg", "failed to read config")
 	}
 
-	logging.Info("read config", "values", cfg)
+	logging.Info("read config", "values", fmt.Sprintf("%+v", cfg))
 
 	postgresOpts := postgres.StartOpts{
 		Host:     cfg.db.Host,
@@ -43,13 +45,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	stor := storage.New(postgresDriver, nil)
+	metricsSvc := metrics.NewService()
+
+	stor := storage.New(postgresDriver, metricsSvc)
 
 	garantexCli := garantex.NewClient()
 
-	rateProvider := rateprovider.New(garantexCli, nil)
+	rateProvider := rateprovider.New(garantexCli, metricsSvc)
 
-	ctrl := controller.NewService(rateProvider, stor, nil)
+	ctrl := controller.NewService(rateProvider, stor, metricsSvc)
 
 	go func() {
 		err := api.ListenAndServe(cfg.api.Port, ctrl)

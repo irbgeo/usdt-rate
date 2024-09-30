@@ -1,6 +1,10 @@
 package postgres
 
-import "github.com/irbgeo/usdt-rate/internal/controller"
+import (
+	"time"
+
+	"github.com/irbgeo/usdt-rate/internal/controller"
+)
 
 func toPostgresRate(in controller.Rate) rate {
 	return rate{
@@ -8,6 +12,6 @@ func toPostgresRate(in controller.Rate) rate {
 		TokenB:    in.TokenB,
 		Bid:       in.Bid,
 		Ask:       in.Ask,
-		Timestamp: in.Timestamp,
+		Timestamp: time.Unix(in.Timestamp, 0),
 	}
 }
