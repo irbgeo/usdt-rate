@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: usdtrate
+      POSTGRES_USER: usdtuser
+      POSTGRES_PASSWORD: usdtpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  usdt-rate:
+    image: usdt-rate:latest
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: usdtuser
+      DB_PASSWORD: usdtpassword
+      DB_NAME: usdtrate
+      API_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
